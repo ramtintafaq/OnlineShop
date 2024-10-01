@@ -27,11 +27,9 @@ This project is an online shopping platform built using **Spring Boot**. The pla
 - **Java 22**
 - **Spring Boot 3.0**
 - **Spring Data JPA** for data persistence
-- **Thymeleaf** for view rendering
 - **MySQL** for database management
 - **Spring Security** for authentication and role-based access
 - **Maven** for dependency management
-- **Stripe/PayPal** (optional integration for payment processing)
 - **Local File Storage** for handling product images
 
 ## Installation and Setup
