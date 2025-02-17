@@ -1,7 +1,7 @@
 # Online Shop Web Application
 
 ## Project Description
-This project is an online shopping platform built using **Spring Boot**. The platform allows users to browse products, add them to their shopping cart, and checkout. The checkout process clears the cart, and users can manage their profiles and past purchases. Admins can manage products, view sales, and create product listings.
+This project is an online shopping platform built using **Spring Boot**. The platform allows users to browse products, add them to their shopping cart, and checkout. The checkout process clears the cart, and users can manage their profiles and past purchases. Admins can manage products, view sales, and create product listings. Additionally, users can reset their passwords via email through the **Forgot Password** feature.
 
 ## Features
 
@@ -12,6 +12,8 @@ This project is an online shopping platform built using **Spring Boot**. The pla
 - View and manage items in the shopping cart.
 - Checkout to clear the shopping cart.
 - View past purchases.
+- **Forgot Password**: Request a password reset link via email.
+- **Password Reset**: Change password securely via the reset link sent to your email.
 
 ### Admin:
 - Create and manage product listings.
@@ -29,6 +31,7 @@ This project is an online shopping platform built using **Spring Boot**. The pla
 - **Spring Data JPA** for data persistence
 - **MySQL** for database management
 - **Spring Security** for authentication and role-based access
+- **Spring Email** for sending password reset emails
 - **Maven** for dependency management
 - **Local File Storage** for handling product images
 
@@ -40,13 +43,21 @@ This project is an online shopping platform built using **Spring Boot**. The pla
     cd OnlineShop
     ```
 
-2. **Configure the database**:
-   - Edit the `src/main/resources/application.properties` file with your MySQL database credentials:
+2. **Configure the database and email settings**:
+   - Edit the `src/main/resources/application.properties` file with your MySQL and email credentials:
      ```properties
      spring.datasource.url=jdbc:mysql://localhost:3306/online_shop_db
      spring.datasource.username=shopuser
      spring.datasource.password=shoppass
      spring.jpa.hibernate.ddl-auto=update
+
+     # Email settings for password reset
+     spring.mail.host=smtp.gmail.com
+     spring.mail.port=587
+     spring.mail.username=your_email@gmail.com
+     spring.mail.password=your_email_password
+     spring.mail.properties.mail.smtp.auth=true
+     spring.mail.properties.mail.smtp.starttls.enable=true
      ```
 
 3. **Run the application**:
@@ -63,6 +74,8 @@ This project is an online shopping platform built using **Spring Boot**. The pla
 - Sign up and log in to browse products.
 - Add products to your shopping cart and manage cart items.
 - Checkout to clear the cart.
+- If you forget your password, use the **Forgot Password** feature to request a reset link.
+- Change your password via the link sent to your registered email.
 
 ### For Admins:
 - Log in to create and manage product listings.
