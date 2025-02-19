@@ -3,37 +3,34 @@ package it.tafaq.springboot.onlineshop.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
 public class JwtUtil {
-    private SecretKey SECRET_KEY;
 
-    @PostConstruct
-    public void generatedSecretKey() throws NoSuchAlgorithmException {
-        KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
-        keyGenerator.init(256);
-        SECRET_KEY = keyGenerator.generateKey();
+    private final SecretKey SECRET_KEY;
+
+    public JwtUtil(@Value("${jwt.secret}") String secretKey) {
+        byte[] decodedKey = Base64.getDecoder().decode(secretKey);
+        this.SECRET_KEY = Keys.hmacShaKeyFor(decodedKey);
     }
+
 
     public String generateToken(String username, Collection<? extends GrantedAuthority> roles) {
         Map<String, Object> claims = new HashMap<>();
-        // Add roles to claims
         claims.put("roles", roles.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
 
-        // Create and return the token
         return createToken(claims, username);
     }
 
@@ -42,7 +39,7 @@ public class JwtUtil {
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // Token valid for 1 hour
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
                 .compact();
     }

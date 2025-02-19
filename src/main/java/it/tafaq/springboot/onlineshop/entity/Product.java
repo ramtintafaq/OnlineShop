@@ -18,7 +18,6 @@ import java.util.Set;
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id"
 )
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public class Product implements Serializable {
 
     @Serial
@@ -41,12 +40,12 @@ public class Product implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "$$_hibernate_interceptor", "products"})
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "products"})
     private Brand brand;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "$$_hibernate_interceptor"})
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Category category;
 
     @ColumnDefault("0.00")
@@ -58,6 +57,7 @@ public class Product implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
+    @JsonIgnore
     private User createdBy;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
@@ -67,6 +67,12 @@ public class Product implements Serializable {
     @OneToMany(mappedBy = "product")
     @JsonIgnore
     private Set<ShoppingCartItem> shoppingCartItems = new LinkedHashSet<>();
+
+    @Column(name = "is_available")
+    private boolean isAvailable;
+
+    @Column(name = "amount")
+    private Integer amount;
 
     public Set<ShoppingCartItem> getShoppingCartItems() {
         return shoppingCartItems;
@@ -156,4 +162,19 @@ public class Product implements Serializable {
         this.createdAt = createdAt;
     }
 
+    public boolean isAvailable() {
+        return isAvailable;
+    }
+
+    public void setAvailable(boolean available) {
+        isAvailable = available;
+    }
+
+    public Integer getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Integer amount) {
+        this.amount = amount;
+    }
 }

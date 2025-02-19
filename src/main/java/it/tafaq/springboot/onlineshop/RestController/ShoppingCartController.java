@@ -3,6 +3,7 @@ package it.tafaq.springboot.onlineshop.RestController;
 import it.tafaq.springboot.onlineshop.dto.AddToCartRequestDto;
 import it.tafaq.springboot.onlineshop.dto.ShoppingCartDto;
 import it.tafaq.springboot.onlineshop.entity.ShoppingCart;
+import it.tafaq.springboot.onlineshop.entity.ShoppingCartItem;
 import it.tafaq.springboot.onlineshop.entity.User;
 import it.tafaq.springboot.onlineshop.repository.ShoppingCartRepository;
 import it.tafaq.springboot.onlineshop.service.ShoppingCartService;
@@ -88,7 +89,18 @@ public class ShoppingCartController {
         if (shoppingCart == null || shoppingCart.getShoppingCartItems().isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No shopping cart found for checkout");
         }
-        shoppingCart.setIs_active(false);
+
+        for (ShoppingCartItem shoppingCartItem : shoppingCart.getShoppingCartItems()) {
+            if (!shoppingCartItem.getProduct().isAvailable()){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("At least one of the products is not available");
+            }
+            shoppingCartItem.getProduct().setAmount(shoppingCartItem.getProduct().getAmount()-shoppingCartItem.getQuantity());
+            if (shoppingCartItem.getProduct().getAmount() == 0){
+                shoppingCartItem.getProduct().setAvailable(false);
+            } else if (shoppingCartItem.getProduct().getAmount() < 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("It's not available");
+            }
+        }
         shoppingCartRepository.save(shoppingCart);
 
         ShoppingCart newCart = new ShoppingCart();

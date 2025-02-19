@@ -93,24 +93,6 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(currentProduct.getName());
     }
 
-    @DeleteMapping("/admin/products/{id}")
-    public ResponseEntity<String> deleteProductByAdmin(@PathVariable Long id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            log.error("Authentication is null");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        String email = authentication.getName();
-        User currentUser = userService.findByEmail(email);
-        Product currentProduct = productService.findById(id);
-        if (!currentUser.getProducts().contains(currentProduct)) {
-            log.error("you didn't created this product!");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        productService.delete(id);
-        return ResponseEntity.status(HttpStatus.OK).body(currentProduct.getName());
-    }
-
     @PostMapping("/admin/{id}/upload-image")
     public ResponseEntity<String> uploadProductImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -141,8 +123,8 @@ public class ProductController {
     }
 
     @GetMapping("/products/{id}")
-    public ResponseEntity<Product> findById(@PathVariable Long id) {
-        Product product = productService.findById(id);
+    public ResponseEntity<ProductDto> findById(@PathVariable Long id) {
+        ProductDto product = productService.findProductDtoById(id);
         return ResponseEntity.status(HttpStatus.OK).body(product);
     }
 }
