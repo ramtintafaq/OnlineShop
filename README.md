@@ -3,6 +3,8 @@
 ## Project Description
 This project is an online shopping platform built using **Spring Boot**. The platform allows users to browse products, add them to their shopping cart, and checkout. The checkout process clears the cart, and users can manage their profiles and past purchases. Admins can manage products, view sales, and create product listings. Additionally, users can reset their passwords via email through the **Forgot Password** feature.
 
+To enhance performance and scalability, this application leverages **Redis** for caching frequently accessed data such as product listings, brands, and shopping cart information.
+
 ## Features
 
 ### User:
@@ -32,6 +34,7 @@ This project is an online shopping platform built using **Spring Boot**. The pla
 - **MySQL** for database management
 - **Spring Security** for authentication and role-based access
 - **Spring Email** for sending password reset emails
+- **Redis** for caching frequently accessed data
 - **Maven** for dependency management
 - **Local File Storage** for handling product images
 
@@ -43,15 +46,21 @@ This project is an online shopping platform built using **Spring Boot**. The pla
     cd OnlineShop
     ```
 
-2. **Configure the database and email settings**:
-   - Edit the `src/main/resources/application.properties` file with your MySQL and email credentials:
+2. **Configure the database, Redis, and email settings**:
+   - Edit the `src/main/resources/application.properties` file with your MySQL, Redis, and email credentials:
      ```properties
+     # Database Configuration
      spring.datasource.url=jdbc:mysql://localhost:3306/online_shop_db
      spring.datasource.username=shopuser
      spring.datasource.password=shoppass
      spring.jpa.hibernate.ddl-auto=update
 
-     # Email settings for password reset
+     # Redis Configuration
+     spring.cache.type=redis
+     spring.redis.host=localhost
+     spring.redis.port=6379
+
+     # Email Settings for Password Reset
      spring.mail.host=smtp.gmail.com
      spring.mail.port=587
      spring.mail.username=your_email@gmail.com
@@ -60,12 +69,17 @@ This project is an online shopping platform built using **Spring Boot**. The pla
      spring.mail.properties.mail.smtp.starttls.enable=true
      ```
 
-3. **Run the application**:
+3. **Run Redis Server (if not already running)**:
+    ```bash
+    redis-server
+    ```
+
+4. **Run the application**:
     ```bash
     mvn spring-boot:run
     ```
 
-4. **Access the application**:
+5. **Access the application**:
    Open a browser and navigate to `http://localhost:8080`.
 
 ## Usage
