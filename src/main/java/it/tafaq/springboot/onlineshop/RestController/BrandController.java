@@ -3,6 +3,7 @@ package it.tafaq.springboot.onlineshop.RestController;
 import it.tafaq.springboot.onlineshop.dto.BrandDto;
 import it.tafaq.springboot.onlineshop.entity.Brand;
 import it.tafaq.springboot.onlineshop.service.BrandService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class BrandController {
         brandService.save(newBrand);
     }
 
+    @Cacheable(value = "brands" , key = "'all'")
     @GetMapping("/")
     public List<Brand> getAllBrands() {
         return brandService.findAll();

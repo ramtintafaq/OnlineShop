@@ -113,13 +113,10 @@ public class UserAuthenticationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid email");
         }
 
-        // Load user details to include roles
         final UserDetails userDetails = customUserDetailsService.loadUserByUsername(email.getEmail());
 
-        // Generate the JWT token including user roles
         final String generatedToken = jwtUtil.generateToken(userDetails.getUsername(), userDetails.getAuthorities());
 
-        // Send the email with the reset link containing the JWT token
         emailService.SendEmail(currentUser.getEmail(), "FORGOT PASSWORD",
                 "We received a request to reset your password. Click the link below to reset your password:" + "\n" +
                         "http://localhost:8080/api/auth/reset-password?token=" + generatedToken);

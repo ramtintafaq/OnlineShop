@@ -2,6 +2,7 @@ package it.tafaq.springboot.onlineshop.service;
 
 import it.tafaq.springboot.onlineshop.entity.User;
 import it.tafaq.springboot.onlineshop.repository.UserRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,6 +17,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Cacheable(value = "user" , key = "#id")
     public User findById(Long id) {
         return userRepository.findById(id).orElse(null);
     }

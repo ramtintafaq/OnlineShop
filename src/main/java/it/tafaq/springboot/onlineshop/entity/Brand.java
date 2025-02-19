@@ -1,7 +1,6 @@
 package it.tafaq.springboot.onlineshop.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 
 import java.util.LinkedHashSet;
@@ -9,7 +8,11 @@ import java.util.Set;
 
 @Entity
 @Table(name = "Brands")
-@JsonIgnoreProperties({"products"})
+@JsonIgnoreProperties({"hibernateLazyInitializer", "$$_hibernate_interceptor"})
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 public class Brand {
     @Id
     @Column(name = "id", nullable = false)
@@ -21,6 +24,7 @@ public class Brand {
 
     @OneToMany(mappedBy = "brand" , cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonManagedReference
+    @JsonIgnore
     private Set<Product> products = new LinkedHashSet<>();
 
     public Set<Product> getProducts() {

@@ -1,19 +1,18 @@
 package it.tafaq.springboot.onlineshop.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "shopping_cart")
-public class ShoppingCart {
+public class ShoppingCart implements Serializable {
     @Id
     @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +31,17 @@ public class ShoppingCart {
     @JsonIgnoreProperties("cart")
     private Set<ShoppingCartItem> shoppingCartItems = new LinkedHashSet<>();
 
+    public boolean is_active() {
+        return is_active;
+    }
+
+    public void setIs_active(boolean is_active) {
+        this.is_active = is_active;
+    }
+
+    @Column(name = "is_active")
+    private boolean is_active;
+
     public Set<ShoppingCartItem> getShoppingCartItems() {
         return shoppingCartItems;
     }
@@ -39,6 +49,7 @@ public class ShoppingCart {
     public void setShoppingCartItems(Set<ShoppingCartItem> shoppingCartItems) {
         this.shoppingCartItems = shoppingCartItems;
     }
+
 
     public Long getId() {
         return id;

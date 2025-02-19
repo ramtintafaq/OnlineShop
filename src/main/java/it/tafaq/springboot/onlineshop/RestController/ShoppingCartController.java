@@ -1,17 +1,21 @@
 package it.tafaq.springboot.onlineshop.RestController;
 
 import it.tafaq.springboot.onlineshop.dto.AddToCartRequestDto;
+import it.tafaq.springboot.onlineshop.dto.ShoppingCartDto;
 import it.tafaq.springboot.onlineshop.entity.ShoppingCart;
 import it.tafaq.springboot.onlineshop.entity.User;
+import it.tafaq.springboot.onlineshop.repository.ShoppingCartRepository;
 import it.tafaq.springboot.onlineshop.service.ShoppingCartService;
 import it.tafaq.springboot.onlineshop.service.UserService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/cart")
@@ -19,10 +23,12 @@ public class ShoppingCartController {
 
     private final ShoppingCartService shoppingCartService;
     private final UserService userService;
+    private final ShoppingCartRepository shoppingCartRepository;
 
-    public ShoppingCartController(ShoppingCartService shoppingCartService , UserService userService) {
+    public ShoppingCartController(ShoppingCartService shoppingCartService , UserService userService, ShoppingCartRepository shoppingCartRepository) {
         this.shoppingCartService = shoppingCartService;
         this.userService = userService;
+        this.shoppingCartRepository = shoppingCartRepository;
     }
 
     @PostMapping("/add")
@@ -31,7 +37,6 @@ public class ShoppingCartController {
         String email = authentication.getName();
         User currentUser = userService.findByEmail(email);
         shoppingCartService.addItemToCart(currentUser , addToCartRequestDto.getProductId() , addToCartRequestDto.getQuantity());
-
         return ResponseEntity.ok("Item added in your shopping cart.");
     }
 
@@ -79,7 +84,47 @@ public class ShoppingCartController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
         }
-        currentUser.getShoppingCarts().clear();
-        return ResponseEntity.ok("Shopping cart checked out.");
+        ShoppingCart shoppingCart = shoppingCartService.getShoppingCart(currentUser);
+        if (shoppingCart == null || shoppingCart.getShoppingCartItems().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No shopping cart found for checkout");
+        }
+        shoppingCart.setIs_active(false);
+        shoppingCartRepository.save(shoppingCart);
+
+        ShoppingCart newCart = new ShoppingCart();
+        newCart.setUser(currentUser);
+        newCart.setCreatedAt(new Date(System.currentTimeMillis()).toInstant());
+        newCart.setIs_active(true);
+        shoppingCartRepository.save(newCart);
+        return ResponseEntity.ok("Cart has been checked out.");
     }
+
+    @GetMapping("/history")
+    public ResponseEntity<Map<String, Object>> getHistory() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        User currentUser = userService.findByEmail(email);
+
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "User not authenticated"));
+        }
+
+        List<ShoppingCart> shoppingCarts = currentUser.getShoppingCarts();
+
+        if (shoppingCarts == null || shoppingCarts.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "No shopping cart found for this user"));
+        }
+
+        ShoppingCart currentShoppingCart = shoppingCarts.get(shoppingCarts.size() - 1);
+        List<ShoppingCart> checkedOutCarts = shoppingCarts.subList(0, shoppingCarts.size() - 1);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("checkedOutCarts", checkedOutCarts.stream().map(cart -> new ShoppingCartDto(cart)).collect(Collectors.toList())); // Fix
+        response.put("currentShoppingCart", new ShoppingCartDto(currentShoppingCart));
+
+        return ResponseEntity.ok(response);
+    }
+
+
+
 }

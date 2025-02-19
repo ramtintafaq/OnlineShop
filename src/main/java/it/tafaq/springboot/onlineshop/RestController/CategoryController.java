@@ -4,6 +4,7 @@ import it.tafaq.springboot.onlineshop.dto.BrandDto;
 import it.tafaq.springboot.onlineshop.dto.CategoryDto;
 import it.tafaq.springboot.onlineshop.entity.Category;
 import it.tafaq.springboot.onlineshop.service.CategoryService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class CategoryController {
         categoryService.save(newCategory);
     }
 
+    @Cacheable(value = "categories" , key = "'all_categories'")
     @GetMapping("/")
     public List<Category> getAllCategories() {
         return categoryService.findAll();

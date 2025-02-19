@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -133,4 +134,15 @@ public class ProductController {
     }
 
 
+    @GetMapping("/products/")
+    public ResponseEntity<List<Product>> findAll() {
+        List<Product> products = productService.findAll();
+        return ResponseEntity.status(HttpStatus.OK).body(products);
+    }
+
+    @GetMapping("/products/{id}")
+    public ResponseEntity<Product> findById(@PathVariable Long id) {
+        Product product = productService.findById(id);
+        return ResponseEntity.status(HttpStatus.OK).body(product);
+    }
 }

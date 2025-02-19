@@ -1,8 +1,11 @@
 package it.tafaq.springboot.onlineshop.dto;
 
+import it.tafaq.springboot.onlineshop.entity.Product;
+
 import java.math.BigDecimal;
 
 public class ProductDto {
+    private Long id;
     private String name;
     private String description;
     private BigDecimal price;
@@ -10,6 +13,12 @@ public class ProductDto {
     private String categoryName;
     private BigDecimal discount;
     private String imageUrl;
+
+    public ProductDto(Product product) {
+        this.id = product.getId();
+        this.name = product.getName();
+        this.price = product.getPrice();
+    }
 
     public String getName() {
         return name;

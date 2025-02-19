@@ -9,6 +9,7 @@ import it.tafaq.springboot.onlineshop.repository.ShoppingCartRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class ShoppingCartService {
@@ -23,11 +24,16 @@ public class ShoppingCartService {
     }
 
     public void addItemToCart(User user, Long productId, int quantity) {
-        ShoppingCart shoppingCart = shoppingCartRepository.findByUser(user);
-        if (shoppingCart == null) {
+        List<ShoppingCart> carts = shoppingCartRepository.findByUser(user);
+        ShoppingCart shoppingCart = carts.stream()
+                .filter(ShoppingCart::is_active)
+                .findFirst()
+                .orElse(null);
+        if (shoppingCart == null || !shoppingCart.is_active()) {
             shoppingCart = new ShoppingCart();
             shoppingCart.setUser(user);
             shoppingCart.setCreatedAt(new Date(System.currentTimeMillis()).toInstant());
+            shoppingCart.setIs_active(true);
             shoppingCartRepository.save(shoppingCart);
         }
 
@@ -58,7 +64,11 @@ public class ShoppingCartService {
     }
 
     public void removeItemFromCart(User user, Long productId) {
-        ShoppingCart shoppingCart = shoppingCartRepository.findByUser(user);
+        List<ShoppingCart> carts = shoppingCartRepository.findByUser(user);
+        ShoppingCart shoppingCart = carts.stream()
+                .filter(ShoppingCart::is_active)
+                .findFirst()
+                .orElse(null);
         if (shoppingCart == null) {
             return;
         }
@@ -74,7 +84,11 @@ public class ShoppingCartService {
     }
 
     public ShoppingCart updateShoppingCartItem(User user , Long productId, int quantity) {
-        ShoppingCart shoppingCart = shoppingCartRepository.findByUser(user);
+        List<ShoppingCart> carts = shoppingCartRepository.findByUser(user);
+        ShoppingCart shoppingCart = carts.stream()
+                .filter(ShoppingCart::is_active)
+                .findFirst()
+                .orElse(null);
         if (shoppingCart == null) {
             return null;
         }
@@ -94,10 +108,26 @@ public class ShoppingCartService {
     }
 
     public void clearCart(User user) {
-        ShoppingCart shoppingCart = shoppingCartRepository.findByUser(user);
+        List<ShoppingCart> carts = shoppingCartRepository.findByUser(user);
+        ShoppingCart shoppingCart = carts.stream()
+                .filter(ShoppingCart::is_active)
+                .findFirst()
+                .orElse(null);
         if (shoppingCart == null) {
             return;
         }
         shoppingCart.getShoppingCartItems().clear();
+    }
+
+    public ShoppingCart getShoppingCart(User user) {
+        List<ShoppingCart> carts = shoppingCartRepository.findByUser(user);
+        ShoppingCart shoppingCart = carts.stream()
+                .filter(ShoppingCart::is_active)
+                .findFirst()
+                .orElse(null);
+        if (shoppingCart == null) {
+            return null;
+        }
+        return shoppingCart;
     }
 }
