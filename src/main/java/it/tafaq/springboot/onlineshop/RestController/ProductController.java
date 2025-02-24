@@ -15,6 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -116,15 +118,27 @@ public class ProductController {
     }
 
 
-    @GetMapping("/products/")
-    public ResponseEntity<List<Product>> findAll() {
-        List<Product> products = productService.findAll();
-        return ResponseEntity.status(HttpStatus.OK).body(products);
-    }
+//    @GetMapping("/products/")
+//    public ResponseEntity<List<Product>> findAll() {
+//        List<Product> products = productService.findAll();
+//        return ResponseEntity.status(HttpStatus.OK).body(products);
+//    }
 
     @GetMapping("/products/{id}")
     public ResponseEntity<ProductDto> findById(@PathVariable Long id) {
         ProductDto product = productService.findProductDtoById(id);
         return ResponseEntity.status(HttpStatus.OK).body(product);
+    }
+
+    @GetMapping("/products")
+    public ResponseEntity<List<Product>> getFilteredProducts(
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search
+    ) {
+        List<Product> filteredProducts = productService.searchAndFilterProducts(minPrice, maxPrice, brand, category, search);
+        return ResponseEntity.status(HttpStatus.OK).body(filteredProducts);
     }
 }

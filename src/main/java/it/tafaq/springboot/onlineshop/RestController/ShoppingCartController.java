@@ -1,11 +1,14 @@
 package it.tafaq.springboot.onlineshop.RestController;
 
 import it.tafaq.springboot.onlineshop.dto.AddToCartRequestDto;
+import it.tafaq.springboot.onlineshop.dto.ProductDto;
 import it.tafaq.springboot.onlineshop.dto.ShoppingCartDto;
+import it.tafaq.springboot.onlineshop.entity.Product;
 import it.tafaq.springboot.onlineshop.entity.ShoppingCart;
 import it.tafaq.springboot.onlineshop.entity.ShoppingCartItem;
 import it.tafaq.springboot.onlineshop.entity.User;
 import it.tafaq.springboot.onlineshop.repository.ShoppingCartRepository;
+import it.tafaq.springboot.onlineshop.service.ProductService;
 import it.tafaq.springboot.onlineshop.service.ShoppingCartService;
 import it.tafaq.springboot.onlineshop.service.UserService;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,11 +28,13 @@ public class ShoppingCartController {
     private final ShoppingCartService shoppingCartService;
     private final UserService userService;
     private final ShoppingCartRepository shoppingCartRepository;
+    private final ProductService productService;
 
-    public ShoppingCartController(ShoppingCartService shoppingCartService , UserService userService, ShoppingCartRepository shoppingCartRepository) {
+    public ShoppingCartController(ShoppingCartService shoppingCartService , UserService userService, ShoppingCartRepository shoppingCartRepository , ProductService productService) {
         this.shoppingCartService = shoppingCartService;
         this.userService = userService;
         this.shoppingCartRepository = shoppingCartRepository;
+        this.productService = productService;
     }
 
     @PostMapping("/add")
@@ -37,6 +42,19 @@ public class ShoppingCartController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User currentUser = userService.findByEmail(email);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (addToCartRequestDto.getProductId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        if (addToCartRequestDto.getQuantity() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        Product product = productService.findById(addToCartRequestDto.getProductId());
+        if (product.getAmount() < addToCartRequestDto.getQuantity()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("We don't have enough product to add to your cart.");
+        }
         shoppingCartService.addItemToCart(currentUser , addToCartRequestDto.getProductId() , addToCartRequestDto.getQuantity());
         return ResponseEntity.ok("Item added in your shopping cart.");
     }
@@ -137,6 +155,48 @@ public class ShoppingCartController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/update")
+    public ResponseEntity<String> update(@RequestBody AddToCartRequestDto updateCartRequest) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        User currentUser = userService.findByEmail(email);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+        }
+        ShoppingCart shoppingCart = shoppingCartService.getShoppingCart(currentUser);
+        if (shoppingCart == null || shoppingCart.getShoppingCartItems().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No shopping cart found for this user");
+        }
+
+        ShoppingCartItem existingItem = shoppingCart.getShoppingCartItems().stream()
+                .filter(item -> item.getProduct().getId().equals(updateCartRequest.getProductId()))
+                .findFirst()
+                .orElse(null);
+        if (existingItem == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found in this shopping cart");
+        }
+
+        if (!existingItem.getProduct().getId().equals(updateCartRequest.getProductId())) {
+            Product newProduct = productService.findById(updateCartRequest.getProductId());
+            if (newProduct == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("New product not found");
+            }
+            if (newProduct.getAmount() < updateCartRequest.getQuantity()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Quantity exceeded");
+            }
+
+            existingItem.setProduct(newProduct);
+            existingItem.setQuantity(updateCartRequest.getQuantity());
+        }else {
+            if (existingItem.getProduct().getAmount() < updateCartRequest.getQuantity()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Quantity exceeded");
+            }
+            existingItem.setQuantity(updateCartRequest.getQuantity());
+        }
+        shoppingCartRepository.save(shoppingCart);
+        return ResponseEntity.ok("Cart has been updated.");
+
+    }
 
 
 }

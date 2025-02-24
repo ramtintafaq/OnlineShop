@@ -1,11 +1,15 @@
 package it.tafaq.springboot.onlineshop.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.netty.util.internal.StringUtil;
 import it.tafaq.springboot.onlineshop.dto.ProductDto;
 import it.tafaq.springboot.onlineshop.entity.Product;
 import it.tafaq.springboot.onlineshop.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -50,6 +54,17 @@ public class ProductService {
         productDto.setCategoryName(product.getCategory().getName());
         productDto.setImageUrl(product.getImageUrl());
         return productDto;
+    }
+
+    public List<Product> searchAndFilterProducts(BigDecimal minPrice, BigDecimal maxPrice , String brand , String category, String search) {
+        return productRepository.findAll().stream()
+                .filter(product -> minPrice == null || product.getPrice().compareTo(minPrice) >= 0)
+                .filter(product -> maxPrice == null || product.getPrice().compareTo(maxPrice) <= 0)
+                .filter(product -> !StringUtils.hasText(brand) || product.getBrand().getName().equalsIgnoreCase(brand))
+                .filter(product -> !StringUtils.hasText(category) || product.getCategory().getName().equalsIgnoreCase(category))
+                .filter(product -> (!StringUtils.hasText(search) || product.getName().toLowerCase().contains(search.toLowerCase())
+                        || product.getDescription().toLowerCase().contains(search.toLowerCase())))
+                .toList();
     }
 }
 
