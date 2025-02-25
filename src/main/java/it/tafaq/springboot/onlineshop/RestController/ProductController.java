@@ -1,5 +1,6 @@
 package it.tafaq.springboot.onlineshop.RestController;
 
+import it.tafaq.springboot.onlineshop.dto.ApiResponse;
 import it.tafaq.springboot.onlineshop.dto.ProductDto;
 import it.tafaq.springboot.onlineshop.entity.Brand;
 import it.tafaq.springboot.onlineshop.entity.Category;
@@ -8,6 +9,9 @@ import it.tafaq.springboot.onlineshop.entity.User;
 import it.tafaq.springboot.onlineshop.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -44,7 +48,7 @@ public class ProductController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {
             log.error("Authentication is null");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Authentication is null"));
         }
         Category productCategory = categoryService.findByName(productDto.getCategoryName());
         Brand productBrand = brandService.findByName(productDto.getBrandName());
@@ -61,16 +65,18 @@ public class ProductController {
         newProduct.setCreatedAt(new Date(System.currentTimeMillis()).toInstant());
         newProduct.setCreatedBy(currentUser);
         newProduct.setCreatedAt(new Date(System.currentTimeMillis()).toInstant());
+        newProduct.setAmount(productDto.getAmount());
+        newProduct.setAvailable(true);
         productService.save(newProduct);
         return ResponseEntity.status(HttpStatus.CREATED).body(newProduct);
     }
 
     @PutMapping("/admin/products/{id}")
-    public ResponseEntity<String> updateProductByAdmin(@RequestBody ProductDto productDto , @PathVariable Long id) {
+    public ResponseEntity<ApiResponse> updateProductByAdmin(@RequestBody ProductDto productDto , @PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {
             log.error("Authentication is null");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Authentication is null"));
 
         }
         String email = authentication.getName();
@@ -78,7 +84,7 @@ public class ProductController {
         Product currentProduct = productService.findById(id);
         if (!currentUser.getProducts().contains(currentProduct)) {
             log.error("you didn't created this product!");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("you didn't created this product"));
         }
 
         Brand currentBrand = brandService.findByName(productDto.getBrandName());
@@ -92,7 +98,7 @@ public class ProductController {
         currentProduct.setBrand(currentBrand);
         currentProduct.setCategory(currentCategory);
         productService.update(currentProduct);
-        return ResponseEntity.status(HttpStatus.OK).body(currentProduct.getName());
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("Product updated"));
     }
 
     @PostMapping("/admin/{id}/upload-image")
@@ -118,11 +124,6 @@ public class ProductController {
     }
 
 
-//    @GetMapping("/products/")
-//    public ResponseEntity<List<Product>> findAll() {
-//        List<Product> products = productService.findAll();
-//        return ResponseEntity.status(HttpStatus.OK).body(products);
-//    }
 
     @GetMapping("/products/{id}")
     public ResponseEntity<ProductDto> findById(@PathVariable Long id) {
@@ -131,14 +132,22 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<List<Product>> getFilteredProducts(
+    public ResponseEntity<Page<Product>> getFilteredProducts(
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) String search
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false , defaultValue = "createdAt") String orderBy,
+            @RequestParam(required = false , defaultValue = "desc") String orderDirection,
+            @RequestParam(required = true) Integer page
     ) {
-        List<Product> filteredProducts = productService.searchAndFilterProducts(minPrice, maxPrice, brand, category, search);
+        Integer size = 20;
+        Sort sort = orderDirection.equalsIgnoreCase("desc") ? Sort.by(orderBy).descending() : Sort.by(orderBy).ascending();
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
+
+        Page<Product> filteredProducts = productService.searchAndFilterProducts(minPrice, maxPrice, brand, category, search, orderBy , orderDirection , page , size);
+
         return ResponseEntity.status(HttpStatus.OK).body(filteredProducts);
     }
 }

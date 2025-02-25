@@ -1,6 +1,7 @@
 package it.tafaq.springboot.onlineshop.RestController;
 
 import it.tafaq.springboot.onlineshop.dto.AddToCartRequestDto;
+import it.tafaq.springboot.onlineshop.dto.ApiResponse;
 import it.tafaq.springboot.onlineshop.dto.ProductDto;
 import it.tafaq.springboot.onlineshop.dto.ShoppingCartDto;
 import it.tafaq.springboot.onlineshop.entity.Product;
@@ -11,7 +12,6 @@ import it.tafaq.springboot.onlineshop.repository.ShoppingCartRepository;
 import it.tafaq.springboot.onlineshop.service.ProductService;
 import it.tafaq.springboot.onlineshop.service.ShoppingCartService;
 import it.tafaq.springboot.onlineshop.service.UserService;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -38,85 +38,85 @@ public class ShoppingCartController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<String> add(@RequestBody AddToCartRequestDto addToCartRequestDto) {
+    public ResponseEntity<ApiResponse> add(@RequestBody AddToCartRequestDto addToCartRequestDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User currentUser = userService.findByEmail(email);
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Not logged in"));
         }
         if (addToCartRequestDto.getProductId() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Product id is required"));
         }
         if (addToCartRequestDto.getQuantity() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         Product product = productService.findById(addToCartRequestDto.getProductId());
         if (product.getAmount() < addToCartRequestDto.getQuantity()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("We don't have enough product to add to your cart.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("We don't have enough product to add to your cart."));
         }
         shoppingCartService.addItemToCart(currentUser , addToCartRequestDto.getProductId() , addToCartRequestDto.getQuantity());
-        return ResponseEntity.ok("Item added in your shopping cart.");
+        return ResponseEntity.ok(new ApiResponse("Item added in your shopping cart."));
     }
 
     @GetMapping("/")
     public ResponseEntity<?> getCart() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("User not authenticated"));
         }
 
         String email = authentication.getName();
         User currentUser = userService.findByEmail(email);
 
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("Not logged in"));
         }
 
         List<ShoppingCart> shoppingCarts = currentUser.getShoppingCarts();
         ShoppingCart theLastOne = shoppingCarts.getLast();
 
         if (shoppingCarts.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No shopping carts found for this user");
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiResponse("No shopping carts found for this user"));
         }
 
         return ResponseEntity.ok(theLastOne);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> delete(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User currentUser = userService.findByEmail(email);
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("User not authenticated"));
         }
         shoppingCartService.removeItemFromCart(currentUser , id);
-        return ResponseEntity.ok("Item removed from your shopping cart.");
+        return ResponseEntity.ok(new ApiResponse("Item removed from your shopping cart."));
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<String> checkout() {
+    public ResponseEntity<ApiResponse> checkout() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User currentUser = userService.findByEmail(email);
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Item removed from your shopping cart."));
         }
         ShoppingCart shoppingCart = shoppingCartService.getShoppingCart(currentUser);
         if (shoppingCart == null || shoppingCart.getShoppingCartItems().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No shopping cart found for checkout");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("No shopping cart found for checkout"));
         }
 
         for (ShoppingCartItem shoppingCartItem : shoppingCart.getShoppingCartItems()) {
             if (!shoppingCartItem.getProduct().isAvailable()){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("At least one of the products is not available");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("At least one of the products is not available"));
             }
             shoppingCartItem.getProduct().setAmount(shoppingCartItem.getProduct().getAmount()-shoppingCartItem.getQuantity());
             if (shoppingCartItem.getProduct().getAmount() == 0){
                 shoppingCartItem.getProduct().setAvailable(false);
             } else if (shoppingCartItem.getProduct().getAmount() < 0) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("It's not available");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("It's not available"));
             }
         }
         shoppingCartRepository.save(shoppingCart);
@@ -126,7 +126,7 @@ public class ShoppingCartController {
         newCart.setCreatedAt(new Date(System.currentTimeMillis()).toInstant());
         newCart.setIs_active(true);
         shoppingCartRepository.save(newCart);
-        return ResponseEntity.ok("Cart has been checked out.");
+        return ResponseEntity.ok(new ApiResponse("Cart has been checked out."));
     }
 
     @GetMapping("/history")
@@ -156,16 +156,16 @@ public class ShoppingCartController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<String> update(@RequestBody AddToCartRequestDto updateCartRequest) {
+    public ResponseEntity<ApiResponse> update(@RequestBody AddToCartRequestDto updateCartRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User currentUser = userService.findByEmail(email);
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("User not authenticated"));
         }
         ShoppingCart shoppingCart = shoppingCartService.getShoppingCart(currentUser);
         if (shoppingCart == null || shoppingCart.getShoppingCartItems().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No shopping cart found for this user");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("No shopping cart found for this user"));
         }
 
         ShoppingCartItem existingItem = shoppingCart.getShoppingCartItems().stream()
@@ -173,28 +173,28 @@ public class ShoppingCartController {
                 .findFirst()
                 .orElse(null);
         if (existingItem == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found in this shopping cart");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("Product not found in this shopping cart"));
         }
 
         if (!existingItem.getProduct().getId().equals(updateCartRequest.getProductId())) {
             Product newProduct = productService.findById(updateCartRequest.getProductId());
             if (newProduct == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("New product not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("New product not found"));
             }
             if (newProduct.getAmount() < updateCartRequest.getQuantity()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Quantity exceeded");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Quantity exceeded"));
             }
 
             existingItem.setProduct(newProduct);
             existingItem.setQuantity(updateCartRequest.getQuantity());
         }else {
             if (existingItem.getProduct().getAmount() < updateCartRequest.getQuantity()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Quantity exceeded");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Quantity exceeded"));
             }
             existingItem.setQuantity(updateCartRequest.getQuantity());
         }
         shoppingCartRepository.save(shoppingCart);
-        return ResponseEntity.ok("Cart has been updated.");
+        return ResponseEntity.ok(new ApiResponse("Cart has been updated."));
 
     }
 

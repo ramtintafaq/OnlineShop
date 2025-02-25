@@ -51,10 +51,10 @@ public class UserAuthenticationController {
     }
 
     @PostMapping("/auth/register")
-    public ResponseEntity<String> registerUser(@RequestBody RegisterDto registerDto) {
+    public ResponseEntity<ApiResponse> registerUser(@RequestBody RegisterDto registerDto) {
 
         if (userService.existsByEmail(registerDto.getEmail())){
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiResponse("Email already exists"));
         }
         User currentUser = new User();
         currentUser.setEmail(registerDto.getEmail());
@@ -64,7 +64,7 @@ public class UserAuthenticationController {
         currentUser.setRole("ROLE_USER");
         currentUser.setCreatedAt(new Date(System.currentTimeMillis()).toInstant());
         userService.save(currentUser);
-        return ResponseEntity.ok("User registered successfully");
+        return ResponseEntity.ok(new ApiResponse("User registered successfully"));
     }
 
     @PostMapping("/auth/login")
@@ -82,7 +82,7 @@ public class UserAuthenticationController {
 
             return ResponseEntity.ok(new AuthenticationResponse(jwt));
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Invalid username or password"));
         }
     }
 
@@ -92,25 +92,25 @@ public class UserAuthenticationController {
         String currentUserName = authentication.getName();
         User currentUser = userService.findByEmail(currentUserName);
         if (currentUser == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Invalid username or password"));
         }
         if (!passwordEncoder.matches(changePasswordDto.getOldPassword(), currentUser.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid old password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Invalid old password"));
         }
         else {
             currentUser.setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
             userService.save(currentUser);
-            return ResponseEntity.ok("Password changed successfully");
+            return ResponseEntity.ok(new ApiResponse("Password changed successfully"));
         }
     }
 
     @PostMapping("/auth/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordDto email){
+    public ResponseEntity<ApiResponse> forgotPassword(@RequestBody ForgotPasswordDto email){
         User currentUser = userService.findByEmail(email.getEmail());
         log.info("Forgot password for {}", email.getEmail());
 
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid email");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("Invalid email"));
         }
 
         final UserDetails userDetails = customUserDetailsService.loadUserByUsername(email.getEmail());
@@ -121,20 +121,20 @@ public class UserAuthenticationController {
                 "We received a request to reset your password. Click the link below to reset your password:" + "\n" +
                         "http://localhost:8080/api/auth/reset-password?token=" + generatedToken);
 
-        return ResponseEntity.ok("Email is sent successfully");
+        return ResponseEntity.ok(new ApiResponse("Email is sent successfully"));
     }
 
 
     @PostMapping("/auth/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestParam String token , @RequestBody NewPasswordDto newPasswordDto){
+    public ResponseEntity<ApiResponse> resetPassword(@RequestParam String token , @RequestBody NewPasswordDto newPasswordDto){
         String email = jwtUtil.extractUsername(token);
         User currentUser = userService.findByEmail(email);
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Invalid email"));
         }
         currentUser.setPassword(passwordEncoder.encode(newPasswordDto.getNewPassword()));
         userService.save(currentUser);
-        return ResponseEntity.ok("Password changed successfully");
+        return ResponseEntity.ok(new ApiResponse("Password changed successfully"));
     }
 
     @PostMapping("/auth/upload-photo")

@@ -1,5 +1,6 @@
 package it.tafaq.springboot.onlineshop.RestController;
 
+import it.tafaq.springboot.onlineshop.dto.ApiResponse;
 import it.tafaq.springboot.onlineshop.dto.RegisterDto;
 import it.tafaq.springboot.onlineshop.entity.User;
 import it.tafaq.springboot.onlineshop.service.UserService;
@@ -31,17 +32,17 @@ public class adminAuthenticationController {
     }
 
     @PostMapping("/admin/register")
-    public ResponseEntity<String> register(@RequestBody RegisterDto registerDto) {
+    public ResponseEntity<ApiResponse> register(@RequestBody RegisterDto registerDto) {
         if (userService.existsByEmail(registerDto.getEmail())) {
-            return ResponseEntity.badRequest().body("Email already exists");
+            return ResponseEntity.badRequest().body(new ApiResponse("Email already exists"));
         }
 
         if (registerDto.getEmail() == null || registerDto.getEmail().isEmpty()) {
-            return ResponseEntity.badRequest().body("Email is required");
+            return ResponseEntity.badRequest().body(new ApiResponse("Email is required"));
         }
 
         if (registerDto.getPassword() == null || registerDto.getPassword().isEmpty()) {
-            return ResponseEntity.badRequest().body("Password is required");
+            return ResponseEntity.badRequest().body(new ApiResponse("Password is required"));
         }
 
         try {
@@ -57,10 +58,10 @@ public class adminAuthenticationController {
             userService.save(currentUser);
             log.info("User with email: {} registered successfully", registerDto.getEmail());
 
-            return ResponseEntity.ok("User registered successfully");
+            return ResponseEntity.ok(new ApiResponse("User registered successfully"));
         } catch (Exception e) {
             log.error("User with email {} cannot register due to error: {}", registerDto.getEmail(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while registering the user");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("User registration failed"));
         }
     }
 

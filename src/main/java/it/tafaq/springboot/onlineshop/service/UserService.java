@@ -17,7 +17,6 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    @Cacheable(value = "user" , key = "#id")
     public User findById(Long id) {
         return userRepository.findById(id).orElse(null);
     }

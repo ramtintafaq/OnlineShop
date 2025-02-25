@@ -13,6 +13,7 @@ public class ProductDto {
     private String categoryName;
     private BigDecimal discount;
     private String imageUrl;
+    private Integer amount;
 
     public ProductDto(Product product) {
         this.id = product.getId();
@@ -85,5 +86,13 @@ public class ProductDto {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public Integer getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Integer amount) {
+        this.amount = amount;
     }
 }

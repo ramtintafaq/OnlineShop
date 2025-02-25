@@ -1,5 +1,6 @@
 package it.tafaq.springboot.onlineshop.RestController;
 
+import it.tafaq.springboot.onlineshop.dto.ApiResponse;
 import it.tafaq.springboot.onlineshop.dto.BrandDto;
 import it.tafaq.springboot.onlineshop.dto.CategoryDto;
 import it.tafaq.springboot.onlineshop.entity.Category;
@@ -28,20 +29,20 @@ public class CategoryController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<String> addNewCategory(@RequestBody CategoryDto categoryDto) {
+    public ResponseEntity<ApiResponse> addNewCategory(@RequestBody CategoryDto categoryDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null ) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Unauthorized"));
         }
         String email = authentication.getName();
         User currentUser = userService.findByEmail(email);
         if (currentUser.getRole().equals("ROLE_USER") || currentUser.getRole().equals("ROLE_ADMIN")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Users cannot add Category");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Users cannot add new category"));
         }
         Category newCategory = new Category();
         newCategory.setName(categoryDto.getName());
         categoryService.save(newCategory);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Category created");
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Category created"));
     }
 
     @Cacheable(value = "categories" , key = "'all_categories'")
@@ -51,22 +52,39 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteCategory(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> deleteCategory(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null ) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Unauthorized"));
         }
         String email = authentication.getName();
         User currentUser = userService.findByEmail(email);
         if (currentUser.getRole().equals("ROLE_USER") || currentUser.getRole().equals("ROLE_ADMIN")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Users cannot delete Category");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Users cannot delete category"));
         }
         categoryService.deleteById(id);
-        return ResponseEntity.status(HttpStatus.OK).body("Category deleted");
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("Category deleted"));
     }
 
     @GetMapping("/{id}")
     public Category getCategory(@PathVariable Long id) {
         return categoryService.findById(id);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse> updateCategory(@PathVariable Long id, @RequestBody CategoryDto categoryDto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null ) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Unauthorized"));
+        }
+        String email = authentication.getName();
+        User currentUser = userService.findByEmail(email);
+        if (currentUser.getRole().equals("ROLE_USER") || currentUser.getRole().equals("ROLE_ADMIN")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Users cannot update category"));
+        }
+        Category category = categoryService.findById(id);
+        category.setName(categoryDto.getName());
+        categoryService.save(category);
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("Category updated"));
     }
 }

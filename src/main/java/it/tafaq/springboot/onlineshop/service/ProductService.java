@@ -6,11 +6,15 @@ import it.tafaq.springboot.onlineshop.dto.ProductDto;
 import it.tafaq.springboot.onlineshop.entity.Product;
 import it.tafaq.springboot.onlineshop.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -28,6 +32,10 @@ public class ProductService {
 
     public List<Product> findAll() {
         return productRepository.findAll();
+    }
+
+    public Page<Product> getAllProducts(Pageable pageable) {
+        return productRepository.findAll(pageable);
     }
 
 
@@ -56,15 +64,50 @@ public class ProductService {
         return productDto;
     }
 
-    public List<Product> searchAndFilterProducts(BigDecimal minPrice, BigDecimal maxPrice , String brand , String category, String search) {
-        return productRepository.findAll().stream()
+    public Page<Product> searchAndFilterProducts(
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            String brand,
+            String category,
+            String search,
+            String orderBy,
+            String orderDirection,
+            Integer page,
+            Integer size
+    ) {
+        List<Product> products = productRepository.findAll().stream()
                 .filter(product -> minPrice == null || product.getPrice().compareTo(minPrice) >= 0)
                 .filter(product -> maxPrice == null || product.getPrice().compareTo(maxPrice) <= 0)
-                .filter(product -> !StringUtils.hasText(brand) || product.getBrand().getName().equalsIgnoreCase(brand))
-                .filter(product -> !StringUtils.hasText(category) || product.getCategory().getName().equalsIgnoreCase(category))
-                .filter(product -> (!StringUtils.hasText(search) || product.getName().toLowerCase().contains(search.toLowerCase())
-                        || product.getDescription().toLowerCase().contains(search.toLowerCase())))
+                .filter(product -> !StringUtils.hasText(brand) ||
+                        product.getBrand().getName().equalsIgnoreCase(brand))
+                .filter(product -> !StringUtils.hasText(category) ||
+                        product.getCategory().getName().equalsIgnoreCase(category))
+                .filter(product -> !StringUtils.hasText(search) ||
+                        product.getName().toLowerCase().contains(search.toLowerCase()) ||
+                        product.getDescription().toLowerCase().contains(search.toLowerCase()))
                 .toList();
+
+        Comparator<Product> comparator = Comparator.comparing(Product::getId);
+        if ("price".equalsIgnoreCase(orderBy)) {
+            comparator = Comparator.comparing(Product::getPrice);
+        } else {
+            comparator = Comparator.comparing(Product::getCreatedAt);
+        }
+
+        if ("desc".equalsIgnoreCase(orderDirection)) {
+            comparator = comparator.reversed();
+        }
+
+        List<Product> sortedProducts = products.stream()
+                .sorted(comparator)
+                .collect(Collectors.toList());
+
+        Pageable pageable = PageRequest.of(page, size);
+        int start = Math.min((int) pageable.getOffset(), sortedProducts.size());
+        int end = Math.min(start + pageable.getPageSize(), sortedProducts.size());
+        List<Product> pagedProducts = sortedProducts.subList(start, end);
+
+        return new PageImpl<>(pagedProducts, pageable, sortedProducts.size());
     }
 }
 

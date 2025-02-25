@@ -1,5 +1,6 @@
 package it.tafaq.springboot.onlineshop.RestController;
 
+import it.tafaq.springboot.onlineshop.dto.ApiResponse;
 import it.tafaq.springboot.onlineshop.dto.BrandDto;
 import it.tafaq.springboot.onlineshop.entity.Brand;
 import it.tafaq.springboot.onlineshop.entity.User;
@@ -27,21 +28,21 @@ public class BrandController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<String> addNewBrand(@RequestBody BrandDto brandDto) {
+    public ResponseEntity<ApiResponse> addNewBrand(@RequestBody BrandDto brandDto) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null ) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Unauthorized"));
         }
         String email = authentication.getName();
         User currentUser = userService.findByEmail(email);
         if (currentUser.getRole().equals("ROLE_USER") || currentUser.getRole().equals("ROLE_ADMIN")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Users cannot add Brand");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Unauthorized"));
         }
         Brand newBrand = new Brand();
         newBrand.setName(brandDto.getName());
         brandService.save(newBrand);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Brand created");
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Brand created"));
     }
 
     @Cacheable(value = "brands" , key = "'all'")
@@ -51,15 +52,18 @@ public class BrandController {
     }
 
     @PostMapping("/{id}")
-    public void updateBrand(@PathVariable Long id, @RequestBody BrandDto brandDto) {
+    public ResponseEntity<ApiResponse> updateBrand(@PathVariable Long id, @RequestBody BrandDto brandDto) {
         Optional<Brand> brand = brandService.findById(id);
-        brand.get().setName(brandDto.getName());
+        brand.ifPresent(value -> value.setName(brandDto.getName()));
         brandService.save(brand.orElse(null));
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("Brand modified"));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteBrand(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> deleteBrand(@PathVariable Long id) {
+
         brandService.deleteById(id);
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("Brand removed"));
     }
 
     @GetMapping("/{id}")
