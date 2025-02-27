@@ -1,7 +1,6 @@
 package it.tafaq.springboot.onlineshop.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.netty.util.internal.StringUtil;
 import it.tafaq.springboot.onlineshop.dto.ProductDto;
 import it.tafaq.springboot.onlineshop.entity.Product;
 import it.tafaq.springboot.onlineshop.repository.ProductRepository;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
