@@ -16,8 +16,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final String[] publicUrls = {"/api/auth/**" , "/api/user/**" , "/uploads/**" , "/api/products/**" ,"/api/categories/**" , "/api/brands/**"};
-    private final String[] adminUrls = {"/api/admin/**"};
-    private final String[] superAdminUrls = {"/api/brands/**" , "/api/categories/**"};
+    private final String[] adminUrls = {"/api/admin/**" , "/stats/**"};
+    private final String[] superAdminUrls = {"/api/brands/**" , "/api/categories/**" , "/stats/**"};
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {

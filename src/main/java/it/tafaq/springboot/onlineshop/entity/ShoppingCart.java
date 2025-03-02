@@ -31,6 +31,9 @@ public class ShoppingCart implements Serializable {
     @JsonIgnoreProperties("cart")
     private Set<ShoppingCartItem> shoppingCartItems = new LinkedHashSet<>();
 
+    @Column(name = "checkedout_at")
+    private Instant Checkedout_at;
+
     public boolean is_active() {
         return is_active;
     }
@@ -75,4 +78,15 @@ public class ShoppingCart implements Serializable {
         this.createdAt = createdAt;
     }
 
+    public Instant getCheckedout_at() {
+        return Checkedout_at;
+    }
+
+    public void setCheckedout_at(Instant checkedout_at) {
+        Checkedout_at = checkedout_at;
+    }
+
+    public boolean isIs_active() {
+        return is_active;
+    }
 }

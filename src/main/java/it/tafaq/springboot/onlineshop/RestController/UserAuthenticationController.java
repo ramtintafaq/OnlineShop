@@ -1,11 +1,10 @@
 package it.tafaq.springboot.onlineshop.RestController;
 
 import it.tafaq.springboot.onlineshop.dto.*;
+import it.tafaq.springboot.onlineshop.entity.ShoppingCart;
 import it.tafaq.springboot.onlineshop.entity.User;
-import it.tafaq.springboot.onlineshop.service.CustomUserDetailsService;
-import it.tafaq.springboot.onlineshop.service.EmailService;
-import it.tafaq.springboot.onlineshop.service.FileStorageService;
-import it.tafaq.springboot.onlineshop.service.UserService;
+import it.tafaq.springboot.onlineshop.repository.ShoppingCartRepository;
+import it.tafaq.springboot.onlineshop.service.*;
 import it.tafaq.springboot.onlineshop.util.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,9 +37,10 @@ public class UserAuthenticationController {
     private final EmailService emailService;
     private final FileStorageService fileStorageService;
     private static final Logger log = LoggerFactory.getLogger(UserAuthenticationController.class);
+    private final ShoppingCartRepository shoppingCartRepository;
 
     @Autowired
-    public UserAuthenticationController(UserService userService, PasswordEncoder passwordEncoder , JwtUtil jwtUtil, CustomUserDetailsService customUserDetailsService , AuthenticationManager authenticationManager , EmailService emailService , FileStorageService fileStorageService) {
+    public UserAuthenticationController(UserService userService, PasswordEncoder passwordEncoder , JwtUtil jwtUtil, CustomUserDetailsService customUserDetailsService , AuthenticationManager authenticationManager , EmailService emailService , FileStorageService fileStorageService , ShoppingCartRepository shoppingCartRepository) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -48,6 +48,7 @@ public class UserAuthenticationController {
         this.authenticationManager = authenticationManager;
         this.emailService = emailService;
         this.fileStorageService = fileStorageService;
+        this.shoppingCartRepository = shoppingCartRepository;
     }
 
     @PostMapping("/auth/register")
@@ -64,6 +65,11 @@ public class UserAuthenticationController {
         currentUser.setRole("ROLE_USER");
         currentUser.setCreatedAt(new Date(System.currentTimeMillis()).toInstant());
         userService.save(currentUser);
+        ShoppingCart newCart = new ShoppingCart();
+        newCart.setUser(currentUser);
+        newCart.setCreatedAt(new Date(System.currentTimeMillis()).toInstant());
+        newCart.setIs_active(true);
+        shoppingCartRepository.save(newCart);
         return ResponseEntity.ok(new ApiResponse("User registered successfully"));
     }
 

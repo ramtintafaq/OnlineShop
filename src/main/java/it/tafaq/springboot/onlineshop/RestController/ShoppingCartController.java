@@ -2,7 +2,6 @@ package it.tafaq.springboot.onlineshop.RestController;
 
 import it.tafaq.springboot.onlineshop.dto.AddToCartRequestDto;
 import it.tafaq.springboot.onlineshop.dto.ApiResponse;
-import it.tafaq.springboot.onlineshop.dto.ProductDto;
 import it.tafaq.springboot.onlineshop.dto.ShoppingCartDto;
 import it.tafaq.springboot.onlineshop.entity.Product;
 import it.tafaq.springboot.onlineshop.entity.ShoppingCart;
@@ -119,6 +118,8 @@ public class ShoppingCartController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("It's not available"));
             }
         }
+        shoppingCart.setIs_active(false);
+        shoppingCart.setCheckedout_at(new Date(System.currentTimeMillis()).toInstant());
         shoppingCartRepository.save(shoppingCart);
 
         ShoppingCart newCart = new ShoppingCart();

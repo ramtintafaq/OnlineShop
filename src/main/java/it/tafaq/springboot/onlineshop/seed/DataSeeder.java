@@ -39,7 +39,6 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        // **Check if database already has data**
         if (productRepository.count() > 0) {
             System.out.println("Data already exists. Skipping seeding.");
             return;
@@ -47,7 +46,6 @@ public class DataSeeder implements CommandLineRunner {
 
         System.out.println("Seeding database with fake data...");
 
-        // **Create 100 categories**
         List<Category> categories = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
             Category category = new Category();
@@ -56,7 +54,6 @@ public class DataSeeder implements CommandLineRunner {
         }
         categoryRepository.saveAll(categories);
 
-        // **Create 1,000 brands**
         List<Brand> brands = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             Brand brand = new Brand();
@@ -65,18 +62,17 @@ public class DataSeeder implements CommandLineRunner {
         }
         brandRepository.saveAll(brands);
 
-        // **Create 10,000 products**
         List<Product> products = new ArrayList<>();
         for (int i = 0; i < 10000; i++) {
             Product product = new Product();
             product.setName(faker.commerce().productName());
             product.setDescription(faker.lorem().sentence());
-            product.setPrice(BigDecimal.valueOf(random.nextDouble() * 500 + 10)); // Price range: 10-500
-            product.setAmount(random.nextInt(100) + 1); // Stock range: 1-100
+            product.setPrice(BigDecimal.valueOf(random.nextDouble() * 500 + 10));
+            product.setAmount(random.nextInt(100) + 1);
             product.setAvailable(true);
             product.setCreatedAt(Instant.now());
-            product.setBrand(brands.get(random.nextInt(brands.size()))); // Assign random brand
-            product.setCategory(categories.get(random.nextInt(categories.size()))); // Assign random category
+            product.setBrand(brands.get(random.nextInt(brands.size())));
+            product.setCategory(categories.get(random.nextInt(categories.size())));
             Long randomId = new Random().nextLong(2) + 13;
             product.setCreatedBy(userService.findById(randomId));
             product.setImageUrl("/uploads/" + faker.file().fileName("product", ".jpg", ".png", "images"));
