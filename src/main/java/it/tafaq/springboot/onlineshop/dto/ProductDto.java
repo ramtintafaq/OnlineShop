@@ -1,8 +1,10 @@
 package it.tafaq.springboot.onlineshop.dto;
 
+import it.tafaq.springboot.onlineshop.entity.Brand;
 import it.tafaq.springboot.onlineshop.entity.Product;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 public class ProductDto {
     private Long id;
@@ -22,6 +24,18 @@ public class ProductDto {
     }
     public ProductDto() {
 
+    }
+
+    public ProductDto(Long id, String name, String description, BigDecimal price, BrandDto brand, CategoryDto category, BigDecimal discount, String imageUrl, Instant createdAt, Integer amount, Boolean isAvailable) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.brandName = brand.getName();
+        this.categoryName = category.getName();
+        this.discount = discount;
+        this.imageUrl = imageUrl;
+        this.amount = amount;
     }
 
     public Long getId() {

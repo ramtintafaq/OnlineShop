@@ -132,22 +132,21 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<Page<Product>> getFilteredProducts(
+    public ResponseEntity<Page<ProductDto>> getFilteredProducts(
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false , defaultValue = "createdAt") String orderBy,
-            @RequestParam(required = false , defaultValue = "desc") String orderDirection,
-            @RequestParam(required = true) Integer page
+            @RequestParam(defaultValue = "createdAt") String orderBy,
+            @RequestParam(defaultValue = "desc") String orderDirection,
+            @RequestParam Integer page
     ) {
-        Integer size = 20;
-        Sort sort = orderDirection.equalsIgnoreCase("desc") ? Sort.by(orderBy).descending() : Sort.by(orderBy).ascending();
-        PageRequest pageRequest = PageRequest.of(page, size, sort);
-
-        Page<Product> filteredProducts = productService.searchAndFilterProducts(minPrice, maxPrice, brand, category, search, orderBy , orderDirection , page , size);
-
-        return ResponseEntity.status(HttpStatus.OK).body(filteredProducts);
+        int size = 5000;
+        Page<ProductDto> filteredProducts = productService.searchAndFilterProducts(
+                minPrice, maxPrice, brand, category, search, orderBy, orderDirection, page, size);
+        return ResponseEntity.ok(filteredProducts);
     }
+
+
 }
