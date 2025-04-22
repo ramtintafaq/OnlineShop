@@ -6,6 +6,7 @@ import it.tafaq.springboot.onlineshop.entity.User;
 import it.tafaq.springboot.onlineshop.repository.ShoppingCartRepository;
 import it.tafaq.springboot.onlineshop.service.*;
 import it.tafaq.springboot.onlineshop.util.JwtUtil;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,7 @@ public class UserAuthenticationController {
     }
 
     @PostMapping("/auth/register")
-    public ResponseEntity<ApiResponse> registerUser(@RequestBody RegisterDto registerDto) {
+    public ResponseEntity<ApiResponse> registerUser(@Valid @RequestBody RegisterDto registerDto) {
 
         if (userService.existsByEmail(registerDto.getEmail())){
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiResponse("Email already exists"));

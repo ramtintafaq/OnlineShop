@@ -3,6 +3,7 @@ package it.tafaq.springboot.onlineshop.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
@@ -18,6 +19,7 @@ public class Category implements Serializable {
     private Long id;
 
     @Column(name = "name", nullable = false)
+    @NotBlank(message = "Name of the category is mandatory")
     private String name;
 
     @OneToMany(mappedBy = "category" , cascade = CascadeType.ALL)

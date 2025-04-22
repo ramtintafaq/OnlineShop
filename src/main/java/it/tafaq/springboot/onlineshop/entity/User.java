@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.io.Serializable;
@@ -23,15 +26,21 @@ public class User implements Serializable {
     private Long id;
 
     @Column(name = "email", nullable = false)
+    @NotBlank(message = "Email is mandatory")
+    @Email(message = "Write a valid email")
     private String email;
 
     @Column(name = "password", nullable = false)
+    @NotBlank(message = "Password is mandatory")
+    @Size(min = 8 , max = 25 , message = "Password must be at least 8 characters long")
     private String password;
 
     @Column(name = "first_name", nullable = false)
+    @NotBlank(message = "First name is mandatory")
     private String firstName;
 
     @Column(name = "last_name", nullable = false)
+    @NotBlank(message = "Last name is mandatory")
     private String lastName;
 
     @Column(name = "profile_photo")

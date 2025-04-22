@@ -68,8 +68,6 @@ public class ProductService {
     ) {
         Sort sort = Sort.by(Sort.Direction.fromString(orderDirection), orderBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-//        Page<Product> products = productRepository.findAll(pageable);
-//        return productRepository.findAll(pageable);
         return productRepository.searchAndFilterProducts(minPrice, maxPrice, brand, category, search, pageable);
     }
 }

@@ -2,6 +2,7 @@ package it.tafaq.springboot.onlineshop.entity;
 
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -20,6 +21,7 @@ public class Brand {
     private Long id;
 
     @Column(name = "name", nullable = false)
+    @NotBlank(message = "Name of the brand is mandatory")
     private String name;
 
     @OneToMany(mappedBy = "brand" , cascade = CascadeType.ALL, fetch = FetchType.EAGER)

@@ -17,9 +17,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT new it.tafaq.springboot.onlineshop.dto.ProductDto(p.id, p.name, p.description, p.price, "+
             "       new it.tafaq.springboot.onlineshop.dto.BrandDto(b.id, b.name), " +
             "       new it.tafaq.springboot.onlineshop.dto.CategoryDto(c.id, c.name), " +
-            "       p.discount, p.imageUrl, p.createdAt, p.amount, p.isAvailable)  FROM Product p " +
+            "       new it.tafaq.springboot.onlineshop.dto.UserDto(cb.id , cb.firstName , cb.lastName), " +
+            "p.discount, p.imageUrl, p.amount, p.createdAt, p.isAvailable )  FROM Product p " +
             "INNER JOIN p.brand b " +
             "INNER JOIN p.category c " +
+            "INNER JOIN p.createdBy cb " +
             "WHERE (:minPrice IS NULL OR p.price >= :minPrice) " +
             "  AND (:maxPrice IS NULL OR p.price <= :maxPrice) " +
             "  AND ((:brand IS NULL OR :brand = '') OR LOWER(b.name) = LOWER(:brand)) " +

@@ -2,6 +2,7 @@ package it.tafaq.springboot.onlineshop.entity;
 
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.io.Serial;
@@ -29,12 +30,14 @@ public class Product implements Serializable {
     private Long id;
 
     @Column(name = "name", nullable = false)
+    @NotBlank(message = "Name for the product is mandatory")
     private String name;
 
     @Column(name = "description")
     private String description;
 
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    @NotBlank(message = "Price is mandatory")
     private BigDecimal price;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -71,6 +74,7 @@ public class Product implements Serializable {
     private boolean isAvailable;
 
     @Column(name = "amount")
+    @NotBlank(message = "Amount of the product is mandatory")
     private Integer amount;
 
     public Set<ShoppingCartItem> getShoppingCartItems() {
