@@ -60,7 +60,6 @@ public class ShoppingCartService {
             shoppingCartItemRepository.save(shoppingCartItem);
         }
 
-        shoppingCartRepository.save(shoppingCart);
     }
 
     public void removeItemFromCart(User user, Long productId) {
